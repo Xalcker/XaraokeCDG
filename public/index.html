@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XaraokeCDG Host</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jszip-utils/dist/jszip-utils.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags/dist/jsmediatags.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reset-css/reset.min.css">
+
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        (function () {
+            const isMobileUserAgent = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+            const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+            if (isMobileUserAgent && hasCoarsePointer) {
+                let roomCode = prompt("Introduce el código de 4 letras de la sala que ves en la pantalla principal:", "");
+                if (roomCode && roomCode.trim().length === 4) {
+                    window.location.href = `/remote.html?sala=${roomCode.trim().toUpperCase()}`;
+                } else if (roomCode !== null) {
+                    alert("Código de sala inválido. Por favor, introduce el código de 4 letras.");
+                }
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <div id="welcome-modal">
+        <h1>XaraokeCDG 🎤</h1>
+        <p>Haz clic para iniciar la sesión</p>
+        <button id="start-btn">Comenzar</button>
+    </div>
+
+    <div class="main-container hidden">
+        <div class="sidebar-left">
+            <div id="now-playing" class="sidebar-section">
+                <h3>🎤 Ahora Suena</h3>
+                <div id="now-playing-content">
+                    <div class="info-card-title">Cargando...</div>
+                    <div class="info-card-subtitle"></div>
+                    <div class="info-card-user"></div>
+                    <div class="info-card-subtitle" id="song-duration"></div>
+                </div>
+            </div>
+            <div id="up-next" class="sidebar-section">
+                <h3>⏭️ A Continuación</h3>
+                <div id="up-next-content">
+                    <div class="info-card-title">Nadie en espera</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="player-column">
+            <div id="cdg_wrapper"></div>
+        </div>
+
+        <div class="sidebar-right">
+            <div id="queue-container" class="sidebar-section">
+                <h3>🗒️ Próximas 5 Canciones</h3>
+                <div id="songQueue"></div>
+            </div>
+            <div id="qr-container" class="sidebar-section">
+                <h3>📲 Control Remoto</h3>
+                <p style="text-align: center; margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: bold;">Sala:</p>
+                <div id="room-code"
+                    style="text-align: center; font-size: 2rem; font-weight: bold; letter-spacing: 5px; margin-bottom: 1rem; color: #1DB954;">
+                    ----</div>
+                <p>Escanea para añadir canciones</p>
+                <img id="qrCode" src="" alt="QR Code">
+            </div>
+        </div>
+    </div>
+    <script type="module" src="karaoke.js"></script>
+</body>
+
+</html>

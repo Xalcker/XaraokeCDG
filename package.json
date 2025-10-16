@@ -1,0 +1,25 @@
+{
+  "name": "XaraokeCDG",
+  "version": "1.0.0",
+  "description": "A real-time, file-based karaoke player using Node.js, WebSockets, and CDG files.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "Karaoke",
+    "CDG",
+    "ZIP",
+    "File-based",
+    "WebSocket",
+    "Remote Control",
+    "Node.js"
+  ],
+  "author": "Xalcker",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3",
+    "ws": "^8.18.0"
+  }
+}

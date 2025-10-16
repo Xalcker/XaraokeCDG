@@ -1,0 +1,187 @@
+/* --- ESTILOS GENERALES Y DE MODAL --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #121212;
+  color: #fff;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#welcome-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(18, 18, 18, 0.95);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+#welcome-modal h1 { font-size: 3rem; margin-bottom: 0; }
+#welcome-modal p { font-size: 1.2rem; color: #aaa; }
+#start-btn {
+  font-size: 1.5rem;
+  padding: 15px 40px;
+  border: none;
+  border-radius: 50px;
+  background-color: #1DB954;
+  color: white;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+}
+#start-btn:hover { background-color: #1ed760; }
+
+/* --- DISEÑO DE LAYOUT PRINCIPAL --- */
+.main-container {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.sidebar-left, .sidebar-right {
+  flex: 0 0 300px;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-column {
+  flex: 1 1 0;
+  display: flex;
+  min-width: 0;
+}
+
+.sidebar-section {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #ccc;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* --- ESTILOS DEL REPRODUCTOR DE KARAOKE --- */
+#cdg_wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  aspect-ratio: 16/9;
+  background: linear-gradient(-45deg, #0d1a44, #5c0d4b, #215582, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.titleImage {
+  background-image: url(Xaraoke.svg);
+  background-size: 90% 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: none;
+}
+
+#cdg_wrapper .cdg-video-player {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+/* --- TARJETAS DE INFORMACIÓN (IZQUIERDA) --- */
+#now-playing, #up-next { text-align: center; }
+
+.info-card-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.info-card-subtitle {
+  font-size: 1rem;
+  color: #b3b3b3;
+  font-style: italic; /* <-- Estilo de cursiva añadido para consistencia */
+}
+
+.info-card-user {
+  font-size: 0.9rem;
+  color: #1DB954;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+/* --- COLA DE CANCIONES (DERECHA) --- */
+#queue-container {
+  flex-grow: 1;
+  min-height: 0;
+}
+
+#songQueue {
+  overflow-y: auto;
+}
+
+.queue-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 8px;
+  border-radius: 5px;
+}
+
+.queue-item:nth-child(odd) {
+  background-color: #282828;
+}
+
+.queue-item .song-name {
+  font-weight: bold;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.queue-item .artist-name {
+  font-style: italic;
+  color: #b3b3b3;
+}
+
+.queue-item .user-name {
+  color: #1DB954;
+  font-style: italic;
+}
+
+/* --- SECCIÓN QR --- */
+#qr-container img {
+  max-width: 100%;
+  display: block;
+  margin: 1rem auto 0;
+  border: 5px solid white;
+  border-radius: 5px;
+}
+
+/* --- ANIMACIONES --- */
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
