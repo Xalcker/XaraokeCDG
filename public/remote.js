@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const songQueueContainer = document.getElementById("songQueue");
   const songBrowser = document.getElementById("songBrowser");
   const currentSongTitle = document.getElementById("current-song-title");
+  const currentSongArtist = document.getElementById("current-song-artist");
+  const currentSongUser = document.getElementById("current-song-user");
   const currentSongTime = document.getElementById("current-song-time");
   const playPauseBtn = document.getElementById("playPauseBtn");
   const skipBtn = document.getElementById("skipBtn");
@@ -19,6 +21,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let upNextSongId = null;
   let currentQueue = [];
   let roomId = null;
+
+  function formatSongTitleForDisplay(fullFilename) {
+    if (!fullFilename) return { artist: "", songTitle: "La cola está vacía" };
+    const parts = fullFilename.replace(".zip", "").split(" - ");
+    if (parts.length >= 2) {
+      return {
+        artist: `(${parts[0].trim()})`,
+        songTitle: parts.slice(1).join(" - ").trim()
+      };
+    }
+    return {
+      artist: "",
+      songTitle: fullFilename.replace(".zip", "")
+    };
+  }
 
   async function initializeAppFlow() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -38,9 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Error verificando la sala:", error);
-      handleInvalidRoom(
-        "No se pudo conectar con el servidor para verificar la sala."
-      );
+      handleInvalidRoom("No se pudo conectar con el servidor.");
       return;
     }
 
@@ -53,15 +68,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleInvalidRoom(message) {
     alert(message);
-    let newRoomCode = prompt(
-      "Por favor, introduce el código de 4 letras de la sala:",
-      ""
-    );
+    let newRoomCode = prompt("Por favor, introduce un nuevo código de sala:", "");
     if (newRoomCode && newRoomCode.trim().length === 4) {
       window.location.search = `?sala=${newRoomCode.trim().toUpperCase()}`;
     } else {
-      document.body.innerHTML =
-        "<h1>Código inválido. Por favor, escanea el QR de nuevo.</h1>";
+      document.body.innerHTML = "<h1>Código inválido. Por favor, escanea el QR de nuevo.</h1>";
     }
   }
 
@@ -82,9 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (name) {
       localStorage.setItem("karaokeUserName", name);
       setupName();
-      if (!ws || ws.readyState === WebSocket.CLOSED) initializeMainApp();
-      else if (ws.readyState === WebSocket.OPEN)
-        ws.send(JSON.stringify({ type: "getQueue" }));
+      if (!ws || ws.readyState === WebSocket.CLOSED) {
+        initializeMainApp();
+      }
     } else {
       alert("Por favor, introduce un nombre válido.");
     }
@@ -100,27 +111,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     ws = new WebSocket(`${protocol}://${window.location.host}?sala=${roomId}`);
 
-    ws.onopen = () =>
-      console.log(`Remoto conectado al WebSocket de la sala: ${roomId}`);
+    ws.onopen = () => console.log(`Remoto conectado a: ${roomId}`);
     ws.onclose = (event) => {
       if (event.code === 4004) {
-        handleInvalidRoom("La sala ya no existe. Introduce un nuevo código.");
+        handleInvalidRoom("La sala ya no existe.");
       } else {
-        console.log(`Remoto desconectado. Intentando reconectar...`);
         setTimeout(connectWebSocket, 3000);
       }
     };
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === "queueUpdate") {
-        renderQueue(message.payload);
-        if (message.payload.length === 0) {
-          currentSongTitle.textContent = "La cola está vacía";
-          currentSongTime.textContent = "";
-        }
+        currentQueue = message.payload;
+        renderQueue(currentQueue);
+        updateNowPlaying(null);
       }
       if (message.type === "timeUpdate") {
         updateNowPlaying(message.payload);
+
         const data = message.payload;
         if (!data || !data.duration) return;
         const remainingTime = data.duration - data.currentTime;
@@ -134,8 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     };
-    ws.onerror = (error) =>
-      console.error("Error de WebSocket en remoto:", error);
+    ws.onerror = (error) => console.error("Error de WebSocket:", error);
   }
 
   async function initializeMainApp() {
@@ -151,30 +158,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderQueue(queue) {
-    currentQueue = queue;
     songQueueContainer.innerHTML = "";
     queue.slice(1).forEach((item) => {
+      const { artist, songTitle } = formatSongTitleForDisplay(item.song);
       const div = document.createElement("div");
       div.className = "queue-item";
-      div.innerHTML = `<span><b>${item.song.replace(".zip", "")}</b> (${
-        item.name
-      })</span>`;
-      if (item.name === myName && myName !== "") {
+      div.innerHTML = `<span><b>${songTitle}</b> ${artist} - por ${item.name}</span>`;
+      if (item.name === myName) {
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "Quitar";
         removeBtn.className = "remove-btn";
         removeBtn.onclick = () => {
-          ws.send(
-            JSON.stringify({
-              type: "removeSong",
-              payload: { id: item.id, name: myName },
-            })
-          );
+          ws.send(JSON.stringify({ type: "removeSong", payload: { id: item.id, name: myName } }));
         };
         div.appendChild(removeBtn);
       }
       songQueueContainer.appendChild(div);
     });
+
     const nextSongIsMine = queue.length > 1 && queue[1].name === myName;
     if (!nextSongIsMine) {
       upNextSongId = null;
@@ -182,38 +183,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateNowPlaying(data) {
-    if (!data || !data.song) {
+    if (currentQueue.length === 0) {
       currentSongTitle.textContent = "La cola está vacía";
+      currentSongArtist.textContent = "";
+      currentSongUser.textContent = "";
       currentSongTime.textContent = "";
       return;
     }
-    const remainingTime = data.duration - data.currentTime;
-    currentSongTitle.textContent = `Ahora suena: 🎵 ${data.song.replace(
-      ".zip",
-      ""
-    )}`;
-    currentSongTime.textContent = `${formatTime(
-      data.currentTime
-    )} / ${formatTime(data.duration)} (Faltan ${formatTime(remainingTime)})`;
+
+    const nowPlaying = currentQueue[0];
+    const { artist, songTitle } = formatSongTitleForDisplay(nowPlaying.song);
+
+    currentSongTitle.textContent = songTitle;
+    currentSongArtist.textContent = artist;
+    currentSongUser.textContent = `por ${nowPlaying.name}`;
+
+    if (data && data.song === nowPlaying.song) {
+      const remainingTime = data.duration - data.currentTime;
+      currentSongTime.textContent = `${formatTime(data.currentTime)} / ${formatTime(data.duration)} (Faltan ${formatTime(remainingTime)})`;
+    } else {
+      currentSongTime.textContent = "Esperando inicio...";
+    }
   }
 
   function notifyUser() {
     console.log("¡Tu canción sigue en 10 segundos!");
     if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
     const audio = new Audio("/notification.mp3");
-    audio
-      .play()
-      .catch((e) =>
-        console.error("No se pudo reproducir el sonido de notificación:", e)
-      );
+    audio.play().catch((e) => console.error("No se pudo reproducir el sonido de notificación:", e));
   }
 
   function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return "0:00";
     const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60)
-      .toString()
-      .padStart(2, "0");
+    const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
   }
 
@@ -262,12 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         if (confirm(`¿Añadir "${songTitle}" a la cola?`)) {
-          ws.send(
-            JSON.stringify({
-              type: "addSong",
-              payload: { song: filename, name: myName },
-            })
-          );
+          ws.send(JSON.stringify({ type: "addSong", payload: { song: filename, name: myName } }));
           renderAlphabet();
         }
       };
@@ -284,20 +282,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   playPauseBtn.addEventListener("click", () => {
-    if (currentQueue.length === 0) return;
-    ws.send(
-      JSON.stringify({
-        type: "controlAction",
-        payload: { action: "playPause" },
-      })
-    );
+    if (currentQueue.length > 0) {
+      ws.send(JSON.stringify({ type: "controlAction", payload: { action: "playPause" } }));
+    }
   });
 
   skipBtn.addEventListener("click", () => {
-    if (currentQueue.length === 0) return;
-    ws.send(
-      JSON.stringify({ type: "controlAction", payload: { action: "skip" } })
-    );
+    if (currentQueue.length > 0) {
+      ws.send(JSON.stringify({ type: "controlAction", payload: { action: "skip" } }));
+    }
   });
 
   initializeAppFlow();
